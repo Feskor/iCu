@@ -27,7 +27,7 @@ void setup()
 {
   pinMode(BUTTONLOW_PIN, OUTPUT);
   digitalWrite(BUTTONLOW_PIN, LOW);
-  
+
   Serial.begin(115200); Serial.println("");
   strip.begin();
   strip.setBrightness(255);
@@ -35,6 +35,9 @@ void setup()
 
   WiFiManager wifiManager;
   int counter = 0;
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
+
   while (digitalRead(BUTTON_PIN) == LOW)
   {
     counter++;
@@ -50,10 +53,9 @@ void setup()
     }
   }
   hotspot.begin(BACKUP_SSID, BACKUP_PASSWORD);
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   chipID = generateChipID();
-  printDebugMessage(String("Last 2 bytes of chip ID: ") + chipID);  
+  printDebugMessage(String("Last 2 bytes of chip ID: ") + chipID);
   String configSSID = String(CONFIG_SSID) + "_" + chipID;
 
   wifiManager.autoConnect(configSSID.c_str());

@@ -2,7 +2,7 @@
 #define _CONFIG_H
 
 #define DEBUG_MODE
-#define LED_COUNT    6
+#define LED_COUNT    8
 #define LED_PIN     D2
 #define BUTTON_PIN  D1
 #define BUTTONLOW_PIN D0
@@ -18,6 +18,6 @@
 #define CONFIG_SSID "icu"
 
 #define BACKUP_SSID "BackupSSIDName"
-#define BACKIP_PASSWORD "BackupPassword"
+#define BACKUP_PASSWORD "BackupPassword"
 
 #endif
