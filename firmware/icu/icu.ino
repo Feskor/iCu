@@ -11,11 +11,12 @@
 
 Servo myServo;
 
-int oldTime = 0;
+long oldTime = 0;
 int oscillationTime = 500;
 String chipID;
 String serverURL = SERVER_URL;
 OpenWiFi hotspot;
+long currentMillis = 0;
 
 void printDebugMessage(String message) {
 #ifdef DEBUG_MODE
@@ -64,13 +65,13 @@ void setup()
 }
 
 //This method starts an oscillation movement in both the LED and servo
-void oscillate(float springConstant, float dampConstant, int c)
+void oscillate(float springConstant, float dampConstant, int color)
 {
   SpringyValue spring;
 
-  byte red = (c >> 16) & 0xff;
-  byte green = (c >> 8) & 0xff;
-  byte blue = c & 0xff;
+  byte red = (color >> 16) & 0xff;
+  byte green = (color >> 8) & 0xff;
+  byte blue = color & 0xff;
 
   spring.c = springConstant;
   spring.k = dampConstant / 100;
@@ -104,11 +105,12 @@ void loop()
     delay(250);
   }
 
+  currentMillis = millis();
   //Every requestDelay, send a request to the server
-  if (millis() > oldTime + REQUEST_DELAY)
+  if (currentMillis > oldTime + REQUEST_DELAY)
   {
     requestMessage();
-    oldTime = millis();
+    oldTime = currentMillis;
   }
 }
 
@@ -149,20 +151,24 @@ void requestMessage()
       int firstComma = response.indexOf(',');
       int secondComma = response.indexOf(',', firstComma + 1);
       int thirdComma = response.indexOf(',', secondComma + 1);
+      int fourthComma = response.indexOf(',', thirdComma + 1);
 
       //Parse data as strings
       String hexColor = response.substring(0, 7);
       String springConstant = response.substring(firstComma + 1, secondComma);
-      String dampConstant = response.substring(secondComma + 1, thirdComma);;
-      String message = response.substring(thirdComma + 1, response.length());;
-
+      String dampConstant = response.substring(secondComma + 1, thirdComma);
+      String message = response.substring(thirdComma + 1, fourthComma);
+      String timeWait = response.substring(fourthComma + 1, response.length());
+      
       printDebugMessage("Message received from server: \n");
       printDebugMessage("Hex color received: " + hexColor);
       printDebugMessage("Spring constant received: " + springConstant);
       printDebugMessage("Damp constant received: " + dampConstant);
       printDebugMessage("Message received: " + message);
+      printDebugMessage("Time to Wait: " + timeWait);
 
-      //Extract the hex color and fade the led strip
+      int synchOffset = timeWait.toInt();
+      delay(synchOffset);
       int number = (int) strtol( &response[1], NULL, 16);
       oscillate(springConstant.toFloat(), dampConstant.toFloat(), number);
     }

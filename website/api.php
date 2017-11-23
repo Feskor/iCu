@@ -28,6 +28,7 @@
 
           // Check if exists
           $stmt = $pdo->prepare("SELECT * FROM icu_device_configuration WHERE device_id = ? AND target_device_id = ?");
+
           if ($stmt->execute([$_GET['d'], $_GET['td']])) {
             if($stmt->rowCount() > 0) {
               // Determine which fields to update
@@ -43,15 +44,19 @@
               $stmt = $pdo->prepare("INSERT INTO icu_device_configuration(color, spring, damp, message, device_id, target_device_id) VALUES (?, ?, ?, ?, ?, ?)");
             }
           }
+
           if ($stmt->execute([$hexcolor, $spring, $damp, $message, $_GET['d'], $_GET['td']])) {
             $response = 1;
           }
         }
       break;
+
       case 'rdc': // remove device configuration
         if(isset($_GET['td'])) {
+          
           // Check if exists
           $stmt = $pdo->prepare("SELECT * FROM icu_device_configuration WHERE device_id = ? AND target_device_id = ?");
+          
           if ($stmt->execute([$_GET['d'], $_GET['td']])) {
             // Remove all queue items of device and target device
             $stmt = $pdo->prepare("DELETE FROM icu_queue WHERE device_id = ? AND target_device_id = ?");
@@ -65,6 +70,7 @@
           }
         }
       break;
+
       case 'bdc': // blacklist device configuration
         if(isset($_GET['td']) && isset($_GET['b'])) {
           // Check if exists
@@ -74,6 +80,7 @@
           }
         }
       break;
+
       case 'gqi': // get queue item
           // Get queue item
           $stmt = $pdo->prepare("UPDATE icu_device SET last_request=CURRENT_TIMESTAMP WHERE id = ?");
@@ -81,7 +88,9 @@
 
           $stmt = $pdo->prepare("SELECT * FROM icu_device_configuration WHERE target_device_id = ? AND device_id" .
 		        " = (SELECT device_id FROM icu_queue WHERE target_device_id = ? ORDER BY timestamp LIMIT 1)");
+
           if($stmt->execute([$_GET['d'], $_GET['d']])) {
+
             if ($stmt->rowCount() == 1) {
               $dc = $stmt->fetch();
 
@@ -92,6 +101,7 @@
                 // We need this check because workshop 1 hardware isn't compatible with a response of more than the color
                 if(isset($_GET['v']) && $_GET['v'] == '2') {
                   $response = $dc['color'] . ',' . $dc['spring'] . ',' . $dc['damp'] . ',' . $dc['message'];
+                  $response .= ',' . (1000-floor(microtime(true)*1000)%1000);
                 } else {
                   $response = $dc['color'];
                 }
@@ -106,9 +116,10 @@
 
                   // OR doesnt work for some reason
                   $stmt1 = $pdo->prepare("DELETE FROM icu_device_configuration WHERE target_device_id = ? AND temp = ?");
-                  if($stmt1->execute([$_GET['d'], 1])) {
 
+                  if($stmt1->execute([$_GET['d'], 1])) {
                   }
+
                   $stmt1 = $pdo->prepare("DELETE FROM icu_device_configuration WHERE device_id = ? AND temp = ?");
                   if($stmt1->execute([$_GET['d'], 1])) {
 
@@ -120,6 +131,7 @@
           }
         }
       break;
+
       case 'sqi': // set queue item
         // Blacklisted device configuration should be able to insert something in the queue
         $stmt = $pdo->prepare("SELECT * FROM icu_device_configuration WHERE device_id = ? AND blacklist = 0");
