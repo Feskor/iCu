@@ -8,6 +8,7 @@
 #include "SpringyValue.h"
 #include "config.h"
 #include "WS2812_util.h"
+#include "OTA_update.h"
 
 Servo myServo;
 
@@ -63,6 +64,7 @@ void setup()
   wifiManager.autoConnect(configSSID.c_str());
   fadeBrightness(0, 255, 255, 1.0);
   myServo.attach(SERVO_PIN);
+  checkForUpdates();
 }
 
 //This method starts an oscillation movement in both the LED and servo
