@@ -65,6 +65,9 @@ void setup()
   fadeBrightness(0, 255, 255, 1.0);
   myServo.attach(SERVO_PIN);
   checkForUpdates();
+
+  HTTPClient http;
+  http.begin(serverURL + "/add_device?device_id=" + chipID);
 }
 
 //This method starts an oscillation movement in both the LED and servo
