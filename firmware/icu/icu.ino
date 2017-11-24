@@ -53,9 +53,10 @@ void setup()
       ESP.reset();
     }
   }
-  hotspot.begin(BACKUP_SSID, BACKUP_PASSWORD);
+  //hotspot.begin(BACKUP_SSID, BACKUP_PASSWORD);
 
   chipID = generateChipID();
+  printDebugMessage(SERVER_URL);
   printDebugMessage(String("Last 2 bytes of chip ID: ") + chipID);
   String configSSID = String(CONFIG_SSID) + "_" + chipID;
 
