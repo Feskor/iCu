@@ -56,7 +56,7 @@
         <textarea name="m" id="message" rows="5"><?php echo $message; ?></textarea>
       </div>
       <div class="text-center">
-        <button type="submit" name="t" value="sdc" class="std-button">Configure</button>
+        <button type="submit" name="t" value="sdc" class="std-button">Save</button>
       </div>
     </form>
   </div>
