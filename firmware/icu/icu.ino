@@ -4,6 +4,7 @@
 #include <Servo.h>
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h>
+#include "LedMatrix.h"
 
 #include "SpringyValue.h"
 #include "config.h"
@@ -13,11 +14,13 @@
 Servo myServo;
 
 long oldTime = 0;
-int oscillationTime = 500;
+int oscillationDuration = MAX_OSCILLATION_DURATION;
 String chipID;
 String serverURL = SERVER_URL;
 OpenWiFi hotspot;
 long currentMillis = 0;
+
+LedMatrix ledMatrix = LedMatrix(1, MATRIX_CS_PIN);
 
 void printDebugMessage(String message) {
 #ifdef DEBUG_MODE
@@ -39,6 +42,10 @@ void setup()
   int counter = 0;
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
+  ledMatrix.init();
+  ledMatrix.setIntensity(LED_MATRIX_BRIGHTNESS);
+  ledMatrix.clear();
+  ledMatrix.commit();
 
   while (digitalRead(BUTTON_PIN) == LOW)
   {
@@ -54,7 +61,8 @@ void setup()
       ESP.reset();
     }
   }
-  //hotspot.begin(BACKUP_SSID, BACKUP_PASSWORD);
+
+  hotspot.begin(BACKUP_SSID, BACKUP_PASSWORD);
 
   chipID = generateChipID();
   printDebugMessage(SERVER_URL);
@@ -67,13 +75,16 @@ void setup()
   checkForUpdates();
 
   HTTPClient http;
-  http.begin(serverURL + "/add_device?device_id=" + chipID);
+  http.begin(serverURL + "add_device.php?device_id=" + chipID);
+  uint16_t httpCode = http.GET();
+  http.end();
 }
 
 //This method starts an oscillation movement in both the LED and servo
 void oscillate(float springConstant, float dampConstant, int color)
 {
   SpringyValue spring;
+  ledMatrix.setIntensity(LED_MATRIX_BRIGHTNESS);
 
   byte red = (color >> 16) & 0xff;
   byte green = (color >> 8) & 0xff;
@@ -84,7 +95,7 @@ void oscillate(float springConstant, float dampConstant, int color)
   spring.perturb(255);
 
   //Start oscillating
-  for (int i = 0; i < oscillationTime; i++)
+  for (int i = 0; i < oscillationDuration; i++)
   {
     spring.update(0.01);
     setAllPixels(red, green, blue, abs(spring.x) / 255.0);
@@ -94,12 +105,23 @@ void oscillate(float springConstant, float dampConstant, int color)
     if (digitalRead(BUTTON_PIN) == LOW)
     {
       //Fade the current color out
+      fadeMatrix(ledMatrix);
       fadeBrightness(red, green, blue, abs(spring.x) / 255.0);
       return;
     }
+
+    if ((i % 6) == 0) {
+      ledMatrix.clear();
+      ledMatrix.scrollTextLeft();
+      ledMatrix.drawText();
+      ledMatrix.commit();
+    }
+
     delay(10);
   }
+
   fadeBrightness(red, green, blue, abs(spring.x) / 255.0);
+  fadeMatrix(ledMatrix);
 }
 
 void loop()
@@ -145,7 +167,6 @@ void requestMessage()
   {
     String response;
     response = http.getString();
-    //Serial.println(response);
 
     if (response == "-1")
     {
@@ -165,16 +186,25 @@ void requestMessage()
       String dampConstant = response.substring(secondComma + 1, thirdComma);
       String message = response.substring(thirdComma + 1, fourthComma);
       String timeWait = response.substring(fourthComma + 1, response.length());
-      
+
+      if (message.length() > 0) {
+        ledMatrix.setText(message);
+        oscillationDuration = message.length() * 42;
+      }
+      else
+        oscillationDuration = MAX_OSCILLATION_DURATION;
+
+
       printDebugMessage("Message received from server: \n");
+      printDebugMessage("bla");
       printDebugMessage("Hex color received: " + hexColor);
       printDebugMessage("Spring constant received: " + springConstant);
       printDebugMessage("Damp constant received: " + dampConstant);
       printDebugMessage("Message received: " + message);
       printDebugMessage("Time to Wait: " + timeWait);
-
-      int synchOffset = timeWait.toInt();
-      delay(synchOffset);
+      
+      
+      delay(timeWait.toInt());
       int number = (int) strtol( &response[1], NULL, 16);
       oscillate(springConstant.toFloat(), dampConstant.toFloat(), number);
     }
