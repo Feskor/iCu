@@ -51,6 +51,28 @@
         }
       break;
 
+      case 'set_name':
+        $stmt = $pdo->prepare("UPDATE icu_device SET human_name = ? WHERE id = ?");
+        if ($stmt->execute([$_GET['name'], $_GET['d']])) {
+          $response=1;
+        }
+      break;
+
+      case 'get_name':
+        $stmt = $pdo->prepare("SELECT human_name FROM icu_device WHERE id = ?");
+        if ($stmt->execute([$_GET['d']])) {
+          if ($stmt->rowCount() == 1) {
+              $dc = $stmt->fetch();
+              if (isset($dc['human_name'])){
+                $response = strlen($dc['human_name']) > 0 ? $dc['human_name'] : $_GET['d'];
+              }
+              else{
+                $response = $_GET['d'];
+              }
+          }
+        }
+      break;
+
       case 'rdc': // remove device configuration
         if(isset($_GET['td'])) {
           
