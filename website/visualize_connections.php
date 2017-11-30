@@ -1,73 +1,106 @@
-<!doctype html>
 <html>
 <head>
-	<title>Network | Sizing</title>
-
-	<style type="text/css">
-		html, body {
-			font: 10pt arial;
-		}
-		#mynetwork {
-			width: 600px;
-			height: 600px;
-			border: 1px solid lightgray;
-		}
-	</style>
-
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.19.1/vis.min.js"></script>
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.19.1/vis.min.css" rel="stylesheet" type="text/css" />
-
-	<script type="text/javascript">
-		var nodes = null;
-		var edges = null;
-		var network = null;
-
-		function draw() {
-
-			var url = "./getconnections.php";
-			var oReq = new XMLHttpRequest();
-
-			oReq.onload = function(){
-				response = oReq.response;
-	            // Parse the JSON data
-	            json = JSON.parse(oReq.responseText);
-
-	            nodesArray = json.nodes;
-	            edgeArray = json.links;
-
-		        nodes = new vis.DataSet(nodesArray);
-				edges = new vis.DataSet(edgeArray);
-
-				// Instantiate our network object.
-				var container = document.getElementById('mynetwork');
-				var data = {
-					nodes: nodes,
-					edges: edges
-				};
-
-				var options = {
-						nodes: {
-						shape: 'dot',
-					}
-				}
-				
-				network = new vis.Network(container, data, options);
-			}
-
-			// Perform request
-            oReq.open("get", url, true);
-            oReq.responseType = "text";
-            oReq.send();
-  		}
-		console.log(nodes);
-		console.log(edges);
-</script>
-
+	<link rel="stylesheet" href="visualize_connections.css">
+	<link href="https://fonts.googleapis.com/css?family=Maven+Pro" rel="stylesheet">
 </head>
-<body onload="draw()">
-	<p>
-		Scale nodes and edges depending on their value. Hover over the edges to get a popup with more information.
-	</p>
-	<div id="mynetwork"></div>
+<body style="margin : 0, height : 100%">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/springy/2.7.1/springy.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/springy/2.7.1/springyui.min.js"></script>
+	<script>
+
+		var url = "./get_connections.php";
+		var oReq = new XMLHttpRequest();
+		var graph = new Springy.Graph();
+
+		var totalNodes = [];
+		var totalEdges = [];
+		
+		oReq.onload = function(){			
+
+			var response = oReq.response;
+            var deviceData = JSON.parse(oReq.responseText);
+
+            var newNodes = [];
+            var newEdges = [];
+            var nodes = deviceData.nodes;
+            var edges = deviceData.links;
+            
+        	if (totalNodes.length < nodes.length){
+        		newNodes = nodes.slice(totalNodes.length);
+        	}
+			        
+        	if (totalEdges.length < edges.length){
+        		newEdges = edges.slice(totalEdges.length);
+        	}
+
+        	if (totalEdges.length > edges.length){
+        		graph.edges.forEach(function(graphEdge){
+        			if ((edges.find(edge => 
+        				(edge.from == graphEdge.source.data.label) && 
+        				(edge.to == graphEdge.target.data.label)) == undefined)){
+        				var index = graph.edges.indexOf(graphEdge);
+        				console.log(index);
+        				graph.edges.splice(index,1);
+        			}
+        		});
+        	}
+        	
+        	totalNodes = nodes;
+         	totalEdges = edges;
+
+         	totalNodes.forEach(function(thisNode){
+				var graphNode = graph.nodes.find(node => node.data.label.indexOf(thisNode.id) >= 0);				
+				if (graphNode != undefined)
+					graphNode.data.label = thisNode.label;
+         	});			
+
+            newNodes.forEach(function(node){
+            	graph.newNode(node);
+            });
+
+            newEdges.forEach(function(connection){
+            	var fromNode = graph.nodes.find(node => node.data.label.indexOf(connection.from) >= 0);
+            	var toNode = graph.nodes.find(node => node.data.label.indexOf(connection.to) >= 0);                	
+            	graph.newEdge(fromNode, toNode, {color : connection.color});
+            });			
+		}
+
+		window.setInterval(function(){
+			// Perform request
+	        oReq.open("get", url, true);
+	        oReq.responseType = "text";
+	        oReq.send();	
+    	},1000);
+		
+
+		function init()
+		{
+		    canvas = document.getElementById("c");
+		    canvas.width = document.body.clientWidth; //document.width is obsolete
+		    canvas.height = document.body.clientHeight; //document.height is obsolete
+		    // canvasW = canvas.width;
+		    // canvasH = canvas.height;
+
+		    // if( canvas.getContext )
+		    // {
+		    //     setup();
+		    //     setInterval( run , 33 );
+		    // }
+		}
+
+
+		jQuery(function(){
+			var springy = window.springy = jQuery('#c').springy({
+				graph: graph,
+				nodeSelected: function(node){
+					console.log('Node selected: ' + JSON.stringify(node.data));
+				}
+			});
+			init();
+		});
+	</script>
+
+	<canvas id="c" width="1000px" height="600px" />
 </body>
 </html>
