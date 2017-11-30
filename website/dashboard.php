@@ -39,12 +39,12 @@
 <link href="https://fonts.googleapis.com/css?family=Maven+Pro" rel="stylesheet">
 <div class="middle-container">
   <div>
-    <h1 class="text-center">Hi <?php echo $_GET['d']; ?>,</h1>
+    <h1 class="text-center">Hi <input type="text" id="enter_name" placeholder=<?php echo $_GET['d']; ?> >,</h1>
     <h2 class="text-center">how are you?</h2>
     <div class="vertical-gap-30 text-center">
       <form action="device_configuration.php" class="inl">
         <input type="hidden" name="d" value="<?php echo $_GET['d']; ?>">
-        <button type="submit" class="circle-button"><span>+</span></button>
+        <button type="submit" class="circle-button"><div style="align-content: center;">+</div></button>
       </form>
     </div>
     <form id="filter" action="#filter" class="middle-container">
@@ -105,6 +105,33 @@
                       </td>
                     </tr>';
             }
-      ?>
+      ?>      
   </table>
 </div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+<script>
+
+  window.onload = function(){
+    var input = $('#enter_name')[0];
+    var url = "./api.php?d=" + input.placeholder + "&t=get_name" + $(this).val();    
+    var oReq = new XMLHttpRequest();
+
+    oReq.onload = function(){
+      input.value = oReq.response;
+    };
+
+    oReq.open("get", url, true);
+    oReq.responseType = "text";
+    oReq.send();  
+
+  };
+
+  $('#enter_name').bind('input', function() {         
+    var url = "./api.php?d=" + this.placeholder + "&t=set_name&name=" + $(this).val();    
+    var oReq = new XMLHttpRequest();
+    
+    oReq.open("get", url, true);
+    oReq.responseType = "text";
+    oReq.send();  
+  });
+</script>
