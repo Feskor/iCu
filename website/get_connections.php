@@ -1,70 +1,38 @@
 <?php
 	require_once("config.php");
+	require_once('database.php');
 
-	// Create connection
-	$conn = mysqli_connect(SERVER_NAME, DB_USERNAME, DB_PASSWORD, DB_NAME)or die('UNABLE TO CONNECT');
-
-	//echo "Connected successfully";
-
-	$sql = "SELECT * FROM icu_device ORDER BY datetime_added";
-	$result = mysqli_query($conn, $sql);
+	$statement = $pdo->prepare("SELECT * FROM icu_device ORDER BY datetime_added");
+	$statement->execute();
+	
 	$rows = array();
+	$rows = $statement->fetchAll(PDO::FETCH_ASSOC);
 	
-	
-	while($r = mysqli_fetch_assoc($result)) {
-   		$rows[] = $r;
-	}
-
-	$name2ID = array();
-
+	$result = array();
 	for ( $i=0; $i<sizeof($rows); $i++){
-		//$rows[$i]["value"] = 1;
-		$rows[$i]["id"] = strtoupper($rows[$i]["id"]);
-		$rows[$i]["label"] = $rows[$i]["id"];
+		$result[$i] = array();
+		$result[$i]["id"] = strtoupper($rows[$i]["id"]);
+		$result[$i]["label"] = $rows[$i]["id"];
 		if (isset($rows[$i]["human_name"]))
-			$rows[$i]["label"] .= ":" . $rows[$i]["human_name"];
-
-		//$rows[$i]["id"] = $i;
-		//unset($rows[$i]["id"]);
-		unset($rows[$i]["human_name"]);
-		unset($rows[$i]["datetime_added"]);
-		unset($rows[$i]["first_ip"]);
- 		unset($rows[$i]["last_request"]);
- 		$name2ID[$rows[$i]["label"]] = $i;
+			$result[$i]["label"] .= ":" . $rows[$i]["human_name"];
+	
 	}
    
-    $output["nodes"] = $rows;
+    $output["nodes"] = $result;
 
-	$sql = "SELECT * FROM icu_device_configuration ORDER BY date_added";
-	$result = mysqli_query($conn, $sql);
-	$rows = array();
-
-	while($r = mysqli_fetch_assoc($result)) {
-   		$rows[] = $r;
-	}
+	$statement = $pdo->prepare("SELECT * FROM icu_device_configuration ORDER BY date_added");
+	$statement->execute();
+	$rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+	$result = array();
 
 	for ( $i=0; $i<sizeof($rows); $i++){
-		
-		$rows[$i]["from"] = strtoupper($rows[$i]["device_id"]);
-		$rows[$i]["to"] = strtoupper($rows[$i]["target_device_id"]);
-		$rows[$i]["value"] = 1;
-		$rows[$i]["title"] = strtoupper($rows[$i]["device_id"]) . " to " . strtoupper($rows[$i]["target_device_id"]);
-
-		unset($rows[$i]["device_id"]);
-		unset($rows[$i]["target_device_id"]);
-		unset($rows[$i]["spring"]);
-		//unset($rows[$i]["color"]);
-		unset($rows[$i]["date_added"]);
-		unset($rows[$i]["damp"]);
-		unset($rows[$i]["message"]);
-		unset($rows[$i]["blacklist"]);
-		unset($rows[$i]["temp"]);		
+		$result[$i] = array();
+		$result[$i]["from"] = strtoupper($rows[$i]["device_id"]);
+		$result[$i]["to"] = strtoupper($rows[$i]["target_device_id"]);		
+		$result[$i]["color"] = strtoupper($rows[$i]["color"]);
 	}
 
-	//print_r($rows);
-	$output["links"] = $rows;
-	//$output["links"] = array();
-	//print_r($output);
+	$output["links"] = $result;
 	echo (json_encode($output));
 
 ?>
