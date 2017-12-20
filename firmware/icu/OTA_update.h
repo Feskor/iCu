@@ -5,7 +5,7 @@ void printDebugMessage(String);
 void checkForUpdates() {
   String firmwareURL = FIRMWARE_URL;
   String firmwareFileURL = firmwareURL + PROJECT_SHORT_NAME + "_" + (FIRMWARE_VERSION + 1) + ".bin";
- 
+
   printDebugMessage("Current firmware version:" + String(PROJECT_SHORT_NAME) + "_" + (FIRMWARE_VERSION));
   HTTPClient httpClient;
   httpClient.begin(firmwareFileURL);

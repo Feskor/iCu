@@ -111,6 +111,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
 <script>
 
+  // Makes the human_name appear in the name input box
   window.onload = function(){
     var input = $('#enter_name')[0];
     var url = "./api.php?d=" + input.placeholder + "&t=get_name" + $(this).val();    
@@ -126,6 +127,7 @@
 
   };
 
+  // puts the human_name in the database when inut changes
   $('#enter_name').bind('input', function() {         
     var url = "./api.php?d=" + this.placeholder + "&t=set_name&name=" + $(this).val();    
     var oReq = new XMLHttpRequest();

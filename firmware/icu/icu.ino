@@ -7,6 +7,7 @@
 #include "LedMatrix.h"
 
 #include "SpringyValue.h"
+#include "settings.h"
 #include "config.h"
 #include "WS2812_util.h"
 #include "OTA_update.h"
