@@ -73,7 +73,7 @@ void setup()
   wifiManager.autoConnect(configSSID.c_str());
   fadeBrightness(0, 255, 255, 1.0);
   myServo.attach(SERVO_PIN);
-  checkForUpdates();
+//  checkForUpdates();
 
   HTTPClient http;
   http.begin(serverURL + "add_device.php?device_id=" + chipID);
