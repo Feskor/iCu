@@ -1,5 +1,3 @@
-#include <OpenWiFi.h>
-
 #include <ESP8266HTTPClient.h>
 #include <Servo.h>
 #include <ESP8266WiFi.h>
@@ -18,7 +16,6 @@ long oldTime = 0;
 int oscillationDuration = MAX_OSCILLATION_DURATION;
 String chipID;
 String serverURL = SERVER_URL;
-OpenWiFi hotspot;
 long currentMillis = 0;
 
 LedMatrix ledMatrix = LedMatrix(1, MATRIX_CS_PIN);
@@ -27,6 +24,27 @@ void printDebugMessage(String message) {
 #ifdef DEBUG_MODE
   Serial.println(String(PROJECT_SHORT_NAME) + ": " + message);
 #endif
+}
+
+void connectToDefault() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(BACKUP_SSID, BACKUP_PASSWORD);
+
+  int timer = 0;
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+    timer += 500;
+    if (timer > 10000)
+      break;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+  }
 }
 
 void setup()
@@ -63,17 +81,16 @@ void setup()
     }
   }
 
-  hotspot.begin(BACKUP_SSID, BACKUP_PASSWORD);
-
   chipID = generateChipID();
   printDebugMessage(SERVER_URL);
   printDebugMessage(String("Last 2 bytes of chip ID: ") + chipID);
   String configSSID = String(CONFIG_SSID) + "_" + chipID;
 
+  connectToDefault(); 
   wifiManager.autoConnect(configSSID.c_str());
   fadeBrightness(0, 255, 255, 1.0);
   myServo.attach(SERVO_PIN);
-//  checkForUpdates();
+  //  checkForUpdates();
 
   HTTPClient http;
   http.begin(serverURL + "add_device.php?device_id=" + chipID);
@@ -203,8 +220,8 @@ void requestMessage()
       printDebugMessage("Damp constant received: " + dampConstant);
       printDebugMessage("Message received: " + message);
       printDebugMessage("Time to Wait: " + timeWait);
-      
-      
+
+
       delay(timeWait.toInt());
       int number = (int) strtol( &response[1], NULL, 16);
       oscillate(springConstant.toFloat(), dampConstant.toFloat(), number);
